@@ -5,10 +5,13 @@ import com.ead.commonlib.exception.ProxyException;
 import com.ead.commonlib.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class ControllerExceptionHandler {
@@ -34,6 +37,16 @@ public class ControllerExceptionHandler {
         return ResponseEntity.status(badGatewayStatus).body(createResponseBody(badGatewayStatus, exception, request));
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<StandardError> handleArgumentNotValid(final MethodArgumentNotValidException exception,
+                                                                final HttpServletRequest request) {
+        final HttpStatus badRequestStatus = HttpStatus.BAD_REQUEST;
+        final StandardError response = createResponseBody(badRequestStatus, exception, request);
+        response.getErrors().addAll(createFieldErrorList(exception));
+
+        return ResponseEntity.status(badRequestStatus).body(response);
+    }
+
     private StandardError createResponseBody(final HttpStatus status,
                                              final Exception exception,
                                              final HttpServletRequest request) {
@@ -42,6 +55,16 @@ public class ControllerExceptionHandler {
                 .message(exception.getMessage())
                 .path(request.getRequestURI())
                 .build();
+    }
+
+    private List<FieldError> createFieldErrorList(final MethodArgumentNotValidException exception) {
+        return exception.getBindingResult()
+                .getFieldErrors().stream()
+                .map(error -> FieldError.builder()
+                        .field(error.getField())
+                        .errorMessage(error.getDefaultMessage())
+                        .build())
+                .collect(Collectors.toList());
     }
 
 }
