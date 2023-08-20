@@ -1,8 +1,10 @@
 package com.ead.commonlib.exception.handler;
 
+import com.ead.commonlib.exception.BadRequestException;
 import com.ead.commonlib.exception.InvalidSubscriptionException;
 import com.ead.commonlib.exception.ProxyException;
 import com.ead.commonlib.exception.ResourceNotFoundException;
+import com.ead.commonlib.exception.ServiceUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -25,13 +27,13 @@ public class ControllerExceptionHandler {
 
     @ExceptionHandler(ProxyException.class)
     public ResponseEntity<StandardError> handleProxyError(final ProxyException exception,
-                                                           final HttpServletRequest request) {
+                                                          final HttpServletRequest request) {
         final HttpStatus badGatewayStatus = HttpStatus.BAD_GATEWAY;
         return ResponseEntity.status(badGatewayStatus).body(createResponseBody(badGatewayStatus, exception, request));
     }
 
-    @ExceptionHandler(InvalidSubscriptionException.class)
-    public ResponseEntity<StandardError> handleInvalidSubscription(final InvalidSubscriptionException exception,
+    @ExceptionHandler({InvalidSubscriptionException.class, BadRequestException.class})
+    public ResponseEntity<StandardError> handleInvalidSubscription(final Exception exception,
                                                                    final HttpServletRequest request) {
         final HttpStatus badGatewayStatus = HttpStatus.BAD_REQUEST;
         return ResponseEntity.status(badGatewayStatus).body(createResponseBody(badGatewayStatus, exception, request));
@@ -45,6 +47,13 @@ public class ControllerExceptionHandler {
         response.getErrors().addAll(createFieldErrorList(exception));
 
         return ResponseEntity.status(badRequestStatus).body(response);
+    }
+
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<StandardError> handleServiceUnavailableException(final ServiceUnavailableException exception,
+                                                                           final HttpServletRequest request) {
+        final HttpStatus intervalServerStatus = HttpStatus.SERVICE_UNAVAILABLE;
+        return ResponseEntity.status(intervalServerStatus).body(createResponseBody(intervalServerStatus, exception, request));
     }
 
     private StandardError createResponseBody(final HttpStatus status,
