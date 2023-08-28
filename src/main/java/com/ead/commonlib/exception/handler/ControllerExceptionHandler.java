@@ -1,6 +1,7 @@
 package com.ead.commonlib.exception.handler;
 
 import com.ead.commonlib.exception.BadRequestException;
+import com.ead.commonlib.exception.InvalidDataException;
 import com.ead.commonlib.exception.InvalidSubscriptionException;
 import com.ead.commonlib.exception.ProxyException;
 import com.ead.commonlib.exception.ResourceNotFoundException;
@@ -32,7 +33,7 @@ public class ControllerExceptionHandler {
         return ResponseEntity.status(badGatewayStatus).body(createResponseBody(badGatewayStatus, exception, request));
     }
 
-    @ExceptionHandler({InvalidSubscriptionException.class, BadRequestException.class})
+    @ExceptionHandler({InvalidSubscriptionException.class, InvalidDataException.class, BadRequestException.class})
     public ResponseEntity<StandardError> handleInvalidSubscription(final Exception exception,
                                                                    final HttpServletRequest request) {
         final HttpStatus badGatewayStatus = HttpStatus.BAD_REQUEST;
